@@ -1,0 +1,46 @@
+name: Deploy Static Site
+
+on:
+  push:
+    branches:
+      - dev
+      - qa
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ---------- Determine environment ----------
+      - name: Set Environment Variables
+        id: env
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+            echo "BUCKET=my-unique-bucket-name-28812409-dev" >> $GITHUB_OUTPUT
+            echo "INDEX_FILE=index-dev.html" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "qa" ]]; then
+            echo "BUCKET=my-unique-bucket-name-28812409-qa" >> $GITHUB_OUTPUT
+            echo "INDEX_FILE=index-qa.html" >> $GITHUB_OUTPUT
+          else
+            echo "BUCKET=my-unique-bucket-name-28812409-prod" >> $GITHUB_OUTPUT
+            echo "INDEX_FILE=index-prod.html" >> $GITHUB_OUTPUT
+          fi
+
+      # ---------- Configure AWS ----------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ---------- Deploy to S3 ----------
+      - name: Upload index file to S3
+        run: |
+          aws s3 cp src/${{ steps.env.outputs.INDEX_FILE }} \
+          s3://${{ steps.env.outputs.BUCKET }}/index-${{ github.ref_name }}.html \
