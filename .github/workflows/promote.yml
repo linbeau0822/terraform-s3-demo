@@ -7,40 +7,6 @@ on:
         description: 'Promotion target: qa or prod'
         required: true
         default: 'qa'
-      dev_bucket:
-        description: 'Dev S3 bucket name'
-        required: true
-        default: 'my-unique-bucket-name-28812409-dev'
-      qa_bucket:
-        description: 'QA S3 bucket name'
-        required: true
-        default: 'my-unique-bucket-name-28812409-qa'
-      prod_bucket:
-        description: 'Prod S3 bucket name'
-        required: true
-        default: 'my-unique-bucket-name-28812409-prod'
-      qa_source_key:
-        description: 'Source object key for dev->qa'
-        required: true
-        default: 'index-dev.html'
-      qa_dest_key:
-        description: 'Destination object key for dev->qa'
-        required: true
-        default: 'index-qa.html'
-      prod_source_key:
-        description: 'Source object key for qa->prod'
-        required: true
-        default: 'index-qa.html'
-      prod_dest_key:
-        description: 'Destination object key for qa->prod'
-        required: true
-        default: 'index-prod.html'
-      qa_cloudfront_distribution:
-        description: 'Optional CloudFront distribution ID for QA to invalidate after promotion'
-        required: false
-      prod_cloudfront_distribution:
-        description: 'Optional CloudFront distribution ID for Prod to invalidate after promotion'
-        required: false
       aws_region:
         description: 'AWS region'
         required: true
@@ -54,51 +20,62 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ github.event.inputs.aws_region }}
-
-      - name: Promote based on target
-        id: promote
+      - name: Set bucket variables
+        id: set-vars
         run: |
           set -euo pipefail
           TARGET="${{ github.event.inputs.target }}"
-          echo "Promotion target: $TARGET"
+          echo "Determining source/destination buckets for target: $TARGET"
           if [ "$TARGET" = "qa" ]; then
-            SRC_BUCKET="${{ github.event.inputs.dev_bucket }}"
-            SRC_KEY="${{ github.event.inputs.qa_source_key }}"
-            DST_BUCKET="${{ github.event.inputs.qa_bucket }}"
-            DST_KEY="${{ github.event.inputs.qa_dest_key }}"
-            CF_DIST_INPUT="${{ github.event.inputs.qa_cloudfront_distribution }}"
+            echo "SRC_BUCKET=my-unique-bucket-name-28812409-dev" >> $GITHUB_OUTPUT
+            echo "DST_BUCKET=my-unique-bucket-name-28812409-qa" >> $GITHUB_OUTPUT
+            echo "SRC_KEY=index-dev.html" >> $GITHUB_OUTPUT
+            echo "DST_KEY=index-qa.html" >> $GITHUB_OUTPUT
+            echo "DST_ENV=qa" >> $GITHUB_OUTPUT
           elif [ "$TARGET" = "prod" ]; then
-            SRC_BUCKET="${{ github.event.inputs.qa_bucket }}"
-            SRC_KEY="${{ github.event.inputs.prod_source_key }}"
-            DST_BUCKET="${{ github.event.inputs.prod_bucket }}"
-            DST_KEY="${{ github.event.inputs.prod_dest_key }}"
-            CF_DIST_INPUT="${{ github.event.inputs.prod_cloudfront_distribution }}"
+            echo "SRC_BUCKET=my-unique-bucket-name-28812409-qa" >> $GITHUB_OUTPUT
+            echo "DST_BUCKET=my-unique-bucket-name-28812409-prod" >> $GITHUB_OUTPUT
+            echo "SRC_KEY=index-qa.html" >> $GITHUB_OUTPUT
+            echo "DST_KEY=index-prod.html" >> $GITHUB_OUTPUT
+            echo "DST_ENV=prod" >> $GITHUB_OUTPUT
           else
             echo "Invalid target: $TARGET (must be 'qa' or 'prod')" >&2
             exit 1
           fi
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.aws_region }}
+
+      - name: Copy object between buckets
+        run: |
+          set -euo pipefail
+          SRC_BUCKET="${{ steps.set-vars.outputs.SRC_BUCKET }}"
+          DST_BUCKET="${{ steps.set-vars.outputs.DST_BUCKET }}"
+          SRC_KEY="${{ steps.set-vars.outputs.SRC_KEY }}"
+          DST_KEY="${{ steps.set-vars.outputs.DST_KEY }}"
           echo "Copying s3://$SRC_BUCKET/$SRC_KEY -> s3://$DST_BUCKET/$DST_KEY"
           aws s3 cp "s3://$SRC_BUCKET/$SRC_KEY" "s3://$DST_BUCKET/$DST_KEY" --acl public-read --metadata-directive REPLACE
-
-          echo "dst_key=$DST_KEY" >> $GITHUB_OUTPUT
-          echo "cf_dist=$CF_DIST_INPUT" >> $GITHUB_OUTPUT
         env:
           AWS_REGION: ${{ github.event.inputs.aws_region }}
 
-      - name: Invalidate CloudFront (optional)
-        if: steps.promote.outputs.cf_dist != ''
+      - name: Invalidate CloudFront for destination (if present)
         run: |
           set -euo pipefail
-          CF_DIST="${{ steps.promote.outputs.cf_dist }}"
-          DST_KEY="${{ steps.promote.outputs.dst_key }}"
-          echo "Invalidating CloudFront distribution $CF_DIST for path /$DST_KEY"
-          aws cloudfront create-invalidation --distribution-id "$CF_DIST" --paths "/$DST_KEY"
+          DST_BUCKET="${{ steps.set-vars.outputs.DST_BUCKET }}"
+          DST_KEY="${{ steps.set-vars.outputs.DST_KEY }}"
+          echo "Looking up CloudFront distribution for bucket: $DST_BUCKET"
+          DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?contains(Origins.Items[0].DomainName, '$DST_BUCKET')].Id" \
+            --output text)
+          if [ -z "$DIST_ID" ]; then
+            echo "No CloudFront distribution found for bucket '$DST_BUCKET' - skipping invalidation"
+            exit 0
+          fi
+          echo "Found distribution id: $DIST_ID"
+          aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/$DST_KEY"
         env:
           AWS_REGION: ${{ github.event.inputs.aws_region }}
