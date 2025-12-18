@@ -58,7 +58,7 @@ jobs:
           SRC_KEY="${{ steps.set-vars.outputs.SRC_KEY }}"
           DST_KEY="${{ steps.set-vars.outputs.DST_KEY }}"
           echo "Copying s3://$SRC_BUCKET/$SRC_KEY -> s3://$DST_BUCKET/$DST_KEY"
-          aws s3 cp "s3://$SRC_BUCKET/$SRC_KEY" "s3://$DST_BUCKET/$DST_KEY" --acl public-read --metadata-directive REPLACE
+          aws s3 cp "s3://$SRC_BUCKET/$SRC_KEY" "s3://$DST_BUCKET/$DST_KEY"
         env:
           AWS_REGION: ${{ github.event.inputs.aws_region }}
 
