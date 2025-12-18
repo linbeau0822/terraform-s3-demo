@@ -44,3 +44,4 @@ jobs:
         run: |
           aws s3 cp src/${{ steps.env.outputs.INDEX_FILE }} \
           s3://${{ steps.env.outputs.BUCKET }}/index-${{ github.ref_name }}.html \
+          --cache-control "no-cache, no-store, max-age=0, must-revalidate"
