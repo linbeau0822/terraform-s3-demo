@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Promotion target: qa or prod'
+        description: 'Promotion target'
         required: true
         default: 'qa'
+        type: choice
+        options:
+          - qa
+          - prod
       aws_region:
         description: 'AWS region'
         required: true
