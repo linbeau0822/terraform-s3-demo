@@ -6,11 +6,11 @@ This is a project as part of my 5+ where I learned Terraform. This project utili
 ![Sequence diagram](image.png)
 
 ## CloudFront Distributions
-**dev:** `https://do3wrs8fapq5e.cloudfront.net`
+**dev:** https://do3wrs8fapq5e.cloudfront.net
 
-**qa:** `https://d2z1dwdrnegcbn.cloudfront.net`
+**qa:** https://d2z1dwdrnegcbn.cloudfront.net
 
-**prod:** `https://d1vrl10xp6tnjy.cloudfront.net`
+**prod:** https://d1vrl10xp6tnjy.cloudfront.net
 
 ## Commands
 Upload a file to an S3 bucket
