@@ -1,7 +1,15 @@
 # Terraform Demo with AWS S3 and CloudFront
 
 ## Overview
-This project is part of my journey learning Terraform. It demonstrates Infrastructure as Code by provisioning AWS resources—specifically S3 buckets and CloudFront distributions—to host a simple webpage. The setup simulates development, QA, and production environments, and incorporates CI/CD pipelines using GitHub Actions to automate deployments and environment promotions. This project highlights environment isolation, automated provisioning, and a workflow for safely promoting changes across environments.
+## Overview
+This project is a Terraform demo that provisions AWS infrastructure to host a simple webpage. It includes:
+
+- **S3 buckets** for storing static content.
+- **CloudFront distributions** to serve content globally.
+- **Simulated environments**: development, QA, and production.
+- **CI/CD workflows** using GitHub Actions to deploy and promote changes safely.
+
+It’s intended as a beginner-friendly example of Infrastructure as Code (IaC), environment isolation, and automated deployments.
 
 ![Sequence diagram](image.png)
 
