@@ -11,8 +11,18 @@ This project is a Terraform demo that provisions AWS infrastructure to host a si
 It’s intended as a beginner-friendly example of Infrastructure as Code (IaC), environment isolation, and automated deployments.
 
 ![Sequence diagram](image.png)
+*Diagram showing how Terraform provisions S3 and CloudFront, and how users access the webpage.*
+
+## Prerequisites
+- Terraform v1.6+
+- AWS CLI configured with appropriate credentials
+- GitHub account (for GitHub Actions CI/CD)
+- Basic knowledge of AWS S3 and CloudFront
 
 ## CloudFront Distributions
+The following CloudFront distributions that I have provisioned serve the webpage hosted in each environment:
+
+
 **dev:** https://do3wrs8fapq5e.cloudfront.net
 
 **qa:** https://d2z1dwdrnegcbn.cloudfront.net
