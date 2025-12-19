@@ -1,7 +1,6 @@
 # Terraform Demo with AWS S3 and CloudFront
 
 ## Overview
-## Overview
 This project is a Terraform demo that provisions AWS infrastructure to host a simple webpage. It includes:
 
 - **S3 buckets** for storing static content.
