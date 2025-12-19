@@ -1,7 +1,7 @@
 # Terraform Demo with AWS S3 and CloudFront
 
 ## Overview
-This is a project as part of my 5+ where I learned Terraform. This project utilizes Terraform as Infrastructure as Code, AWS CloudFront and AWS S3 to create CloudFront distributions, displaying the webpage from an S3 bucket. It simulates a dev, qa, and prod environment setup, with CI/CD configured through Github Actions.
+This project is part of my journey learning Terraform. It demonstrates Infrastructure as Code by provisioning AWS resources—specifically S3 buckets and CloudFront distributions—to host a simple webpage. The setup simulates development, QA, and production environments, and incorporates CI/CD pipelines using GitHub Actions to automate deployments and environment promotions. This project highlights environment isolation, automated provisioning, and a workflow for safely promoting changes across environments.
 
 ![Sequence diagram](image.png)
 
