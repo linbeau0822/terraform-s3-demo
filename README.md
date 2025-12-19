@@ -19,6 +19,20 @@ It’s intended as a beginner-friendly example of Infrastructure as Code (IaC), 
 - GitHub account (for GitHub Actions CI/CD)
 - Basic knowledge of AWS S3 and CloudFront
 
+## GitHub Actions CI/CD
+
+This project uses GitHub Actions to automate deployments and environment promotions:
+
+### Dev Environment
+- The **development CloudFront distribution** is automatically updated whenever changes are pushed to the `dev` branch.
+- No manual intervention is required; GitHub Actions builds and deploys the updated `index.html` to the dev S3 bucket.
+
+### QA and Prod Environments
+- To promote changes from dev → QA or QA → Prod, use the **`Promote site between environments`** GitHub Actions workflow.
+- Trigger the workflow via **`workflow_dispatch`** in the GitHub UI.
+- Select the target environment (qa or prod) when prompted. The workflow will deploy the file in the s3 bucket from the previous environment to the selected environment, ensuring consistent deployments.
+
+
 ## CloudFront Distributions
 The following CloudFront distributions that I have provisioned serve the webpage hosted in each environment:
 
