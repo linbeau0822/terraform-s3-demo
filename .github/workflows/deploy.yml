@@ -1,12 +1,9 @@
-name: Deploy Static Site
+name: Deploy Static Site to dev Environment
 
 on:
   push:
     branches:
       - dev
-      - qa
-      - main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,12 +20,6 @@ jobs:
           if [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
             echo "BUCKET=my-unique-bucket-name-28812409-dev" >> $GITHUB_OUTPUT
             echo "INDEX_FILE=index-dev.html" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == "qa" ]]; then
-            echo "BUCKET=my-unique-bucket-name-28812409-qa" >> $GITHUB_OUTPUT
-            echo "INDEX_FILE=index-qa.html" >> $GITHUB_OUTPUT
-          else
-            echo "BUCKET=my-unique-bucket-name-28812409-prod" >> $GITHUB_OUTPUT
-            echo "INDEX_FILE=index-prod.html" >> $GITHUB_OUTPUT
           fi
 
       # ---------- Configure AWS ----------
